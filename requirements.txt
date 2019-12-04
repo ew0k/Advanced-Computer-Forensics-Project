@@ -1,1 +1,4 @@
 pyyaml
+grr-api-client
+pygelf
+requests
