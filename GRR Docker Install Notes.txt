@@ -1,0 +1,5 @@
+The default docker app directs clients to localhost:8080. To change this, do the following
+- change Client.server.urls in /usr/share/grr-server/install_data/etc/server.local.yaml
+- in the container, run /usr/share/grr-server/bin/grr_config_updater repack_clients
+
+Now you can download client executables and they will work. Testing with VM lab environment with VMs on NAT network
