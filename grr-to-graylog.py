@@ -2,11 +2,11 @@ import yaml
 import json
 import requests
 import pygelf
+import sys
 from grr_api_client import api
 
-GRR_SERVER_URL = "http://192.168.213.141:8000"
-GRR_SERVER_USERNAME = "admin"
-GRR_SERVER_PASSWORD = "demo"
+
+GRAYLOG_SERVER_GELF_URL = "http://localhost:12201/gelf"
 
 
 def yaml_to_json(yaml_file):
@@ -14,61 +14,49 @@ def yaml_to_json(yaml_file):
     return json.dumps(yaml_object)
 
 
-def grr_server_connect():
-    return api.InitHttp(api_endpoint=GRR_SERVER_URL,auth=(GRR_SERVER_USERNAME, GRR_SERVER_PASSWORD))
+def send_to_graylog(json_object, host, short_message):
+    data = {
+            "host": host,
+            "short_message": short_message,
+            "grr_data": json_object
+        }
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post(GRAYLOG_SERVER_GELF_URL, data=json.dumps(data), headers=headers)
 
 
-# def processes()
+def grab_json_from_file(json_file_path):
+    with open(json_file_path) as json_file:
+        return json.load(json_file)
+
+
+def gather_command_line_input():
+    if len(sys.argv) != 4:
+        print("Usage: python grr-to-graylog.py yaml_file_path client_id short_message")
+        exit(1)
+    else:
+
+        return sys.argv[1:4]
 
 
 def main():
-    yaml_file = open("from_Process-exported-process.yaml", 'r')
-    json_file = open("test.json", 'w')
-    json_data = yaml_to_json(yaml_file)
-    json_data = json.loads(json_data)
-    # json_file.write(json_data)
-    json_data = json_data
-    
-    client = "localhost"
-    url = "http://localhost:12201/gelf"
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    count = 0
-    for obj in json_data:
-        # if count > 0:
-        #     break
-        count += 1
-        data = {
-            "version": "1.1",
-            "host": client,
-            "short_message": "Testing multiple",
-            "grr_data": obj
-        }
-        json.dump(data, json_file)
-        r = requests.post(url, data=json.dumps(data), headers=headers)
-        # print(data)
-    # print(r.headers)
-    # print(r.status_code)
+    # Gather command line variables
+    command_line_vars = gather_command_line_input()
+    yaml_file_path = command_line_vars[0]
+    client_id = command_line_vars[1]
+    short_message = command_line_vars[2]
 
+    # Convert GRR YAML data to JSON
+    yaml_file = open(yaml_file_path, 'r')
+    json_file = open("test.json", 'w')
+
+    json_data = yaml_to_json(yaml_file)
+    json_file.write(json_data)
+
+    json_data = json.loads(json_data)
     
+    #Send GRR JSON to Graylog
+    for json_object in json_data:
+        send_to_graylog(json_object, client_id, short_message)
+
 
 main()
-
-
-# grrapi = grr_server_connect()
-    # client = "C.88b6cc9cbab27be3"
-    # ubuntu_client = grrapi.Client(client)
-    # flow = ubuntu_client.Flow("AAF4EAA3")
-    # processes = []
-    # count = 0
-    # for data in flow.ListResults():
-    #     if (count > 0):
-    #         break
-    #     count += 1
-
-    #     process_object = data.payload
-    #     print(type(process_object))
-
-    #     processes.append(data.payload)
-
-    # print(json_data)
-    # print(type(json_data))
