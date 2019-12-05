@@ -1,9 +1,7 @@
 import yaml
 import json
 import requests
-import pygelf
 import sys
-from grr_api_client import api
 
 
 GRAYLOG_SERVER_GELF_URL = "http://localhost:12201/gelf"
@@ -22,6 +20,7 @@ def send_to_graylog(json_object, host, short_message):
         }
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     r = requests.post(GRAYLOG_SERVER_GELF_URL, data=json.dumps(data), headers=headers)
+    # print(r.status_code)
 
 
 def grab_json_from_file(json_file_path):
